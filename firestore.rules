@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Private data: only the signed-in owner can touch their own subtree.
+    // hlc layout is "<15-digit wall ms>.<counter>.<deviceId>"; the wall part must be within +/-24h of server time
+    // so a device with a wildly wrong clock cannot write a stamp that wins every future conflict.
+    match /users/{uid}/{coll}/{id} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.id == id
+        && request.resource.data.hlc is string
+        && request.resource.data.deleted is bool
+        && request.resource.data.serverUpdatedAt == request.time
+        && int(request.resource.data.hlc.split('[.]')[0]) < request.time.toMillis() + 86400000
+        && int(request.resource.data.hlc.split('[.]')[0]) > request.time.toMillis() - 31536000000;
+      allow delete: if false;   // deletes are tombstone writes, never hard deletes
+    }
+
+    // Shared decks: the 6-character code is the capability. Fetch by id only; listing is not allowed.
+    match /sharedDecks/{code} {
+      allow get: if request.auth != null
+        && (
+        !exists(/databases/$(database)/documents/sharedDecks/$(code))
+        || resource.data.revoked == false
+        || resource.data.ownerUid == request.auth.uid
+        );
+      allow list: if false;
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.code == code
+        && request.resource.data.version == 1;
+      allow update: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.code == code
+        && request.resource.data.version >= resource.data.version;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+  }
+}

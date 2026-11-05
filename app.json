@@ -1,23 +1,61 @@
 {
   "expo": {
-    "name": "focusfox",
+    "name": "FocusFox",
     "slug": "focusfox",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "scheme": "focusfox",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.focusfox.app2",
+      "infoPlist": {
+        "NSCameraUsageDescription": "FocusFox uses the camera to recognise your hand gestures for playing chords.",
+        "NSMicrophoneUsageDescription": "FocusFox records your voice when you save a music performance."
+      }
     },
     "android": {
+      "package": "com.focusfox.app2",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#E3DEFB",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "POST_NOTIFICATIONS",
+        "VIBRATE"
+      ],
       "predictiveBackGestureEnabled": false
     },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#6C5CE7"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FocusFox uses the camera to recognise hand gestures."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "FocusFox records your voice with your performances."
+        }
+      ],
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      "expo-status-bar",
+      "expo-font",
+      "expo-asset"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
