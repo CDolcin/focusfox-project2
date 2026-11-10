@@ -18,7 +18,7 @@ export async function exportDeckFile(deck: Deck, cards: Card[]) {
   const file = new File(Paths.cache, `${deck.name.replace(/[^\w-]+/g, '_') || 'deck'}.focusfox.json`);
   if (file.exists) file.delete();
   file.create();
-  file.write(serializeDeck(deck, cards, Date.now()));
+  await file.write(serializeDeck(deck, cards, Date.now()));
   if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Export deck' });
   return file.uri;
 }

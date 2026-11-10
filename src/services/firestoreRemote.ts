@@ -1,6 +1,8 @@
 import {
   Firestore, Timestamp, collection, doc, getDocs, limit as qLimit, onSnapshot, orderBy, query, runTransaction, serverTimestamp, startAfter, where,
 } from 'firebase/firestore';
+import { FirebaseStorage } from 'firebase/storage';
+import { cloudRecord } from './mediaCloud';
 import { CollectionName } from '../core/models';
 import { AnyRecord, PullPage, PushResult, RemoteAdapter, RemoteError, Unsubscribe, compareHlc } from '../core/sync';
 
@@ -21,10 +23,11 @@ function toRemoteError(e: unknown): RemoteError {
  * `serverUpdatedAt` is assigned by the server and is used ONLY as the pull cursor.
  */
 export class FirestoreRemote implements RemoteAdapter {
-  constructor(private readonly db: Firestore, private readonly uid: string) {}
+  constructor(private readonly db: Firestore, private readonly uid: string, private readonly storage?: FirebaseStorage) {}
   private col(c: CollectionName) { return collection(this.db, 'users', this.uid, c); }
 
   async push(c: CollectionName, record: AnyRecord): Promise<PushResult> {
+    const prepared = this.storage ? await cloudRecord(this.storage, this.uid, c, record) : record;
     const ref = doc(this.col(c), record.id);
     try {
       return await runTransaction(this.db, async tx => {
@@ -33,7 +36,7 @@ export class FirestoreRemote implements RemoteAdapter {
           const cur = snap.data() as AnyRecord;
           if (compareHlc(cur.hlc, record.hlc) >= 0) return { status: 'stale', current: { ...cur, id: snap.id } } as PushResult;
         }
-        tx.set(ref, { ...record, serverUpdatedAt: serverTimestamp() });
+        tx.set(ref, { ...prepared, serverUpdatedAt: serverTimestamp() });
         return { status: 'applied' } as PushResult;
       });
     } catch (e) { throw toRemoteError(e); }

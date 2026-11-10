@@ -53,7 +53,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user) { setEngine(null); return; }
     let cancelled = false; let eng: SyncEngine | null = null;
     (async () => {
-      const remote = fb && !user.uid.startsWith('local_') ? new FirestoreRemote(fb.db, user.uid) : null;
+      const remote =
+        fb && !user.uid.startsWith('local_')
+          ? new FirestoreRemote(fb.db, user.uid)
+          : null;
       eng = await SyncEngine.create({ db: new LocalDb(asyncStorageKV, user.uid), remote, deviceId: await deviceId() });
       if (cancelled) return;
       setEngine(eng);

@@ -62,6 +62,9 @@ export interface Card {
 }
 
 export interface FocusSession {
+  // Flashcard module selected for this focus session.
+  moduleId?: string | null;
+
   label: string;
   plannedMinutes: number;
   actualMinutes: number;
@@ -99,6 +102,9 @@ export interface Settings {
   notificationsEnabled: boolean;
   darkModeOverride: 0 | 1 | 2;     // 0 = follow system, 1 = light, 2 = dark
   bestPracticeScores: Partial<Record<Instrument, number>>;
+  friendCodes?: string[];
+  friendCode?: string | null;
+  bestCameraPracticeScores?: Partial<Record<Instrument, number>>;
 }
 export const DEFAULT_SETTINGS: Settings = {
   focusMinutes: 25, breakMinutes: 5, sessionsGoal: 4, backgroundChoice: 0,
